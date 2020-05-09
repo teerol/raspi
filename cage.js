@@ -9,7 +9,7 @@ ruuvi.on('found', tag => {
   console.log('Found RuuviTag, id: ' + tag.id);
   tag.on('updated', data => {
 	var c=new Date();
-   	if (c.getTime()-last_update.getTime()>60000){
+   	if (c.getTime()-last_update.getTime()>=60000){
 		temps.push(data.temperature);
 		pressures.push(data.pressure);
 		humiditis.push(data.humidity);
@@ -28,9 +28,9 @@ ruuvi.on('found', tag => {
 
 // telebot commands
 const HELP = 'Sää Ratinassa \n'+
-'/lampo kertoo nykyisen lämpötilan, sekä viimeisen tunnin ja vuorokauden keski- maksimi- ja minimi lämpötilat \n'+
-'/paine kertoo nykyisen ilmanpaineen, sekä viimeisen tunnin ja vuorokauden keski- maksimi- ja minimi ilmanpaineet \n'+
-'/kosteus kertoo nykyisen ilmankosteuden, sekä viimeisen tunnin ja vuorokauden keski- maksimi- ja minimi ilmankosteudet \n'+
+'/lampo kertoo nykyisen lämpötilan, sekä viimeisen tunnin ja vuorokauden keski- maksimi- ja min lämpötilat \n'+
+'/paine kertoo nykyisen ilmanpaineen, sekä viimeisen tunnin ja vuorokauden keski- maksimi- ja min ilmanpaineet \n'+
+'/kosteus kertoo nykyisen ilmankosteuden, sekä viimeisen tunnin ja vuorokauden keski- maksimi- ja min ilmankosteudet \n'+
 '/updated kertoo koska sää on viimeksi päivittynyt \n'+
 '/ennuste generoi videoennusteen (beta)';
 
@@ -41,7 +41,7 @@ function avg(arr) {
 	}
 	return sum/arr.length;
 }
-function minimi(arr){
+function min(arr){
 	min=arr[0];
 	for (i=1;i<arr.length;i++){
 		if (min > arr[i]){
@@ -51,7 +51,7 @@ function minimi(arr){
 	return min;
 }
 
-function maximi(arr){
+function max(arr){
 	max=arr[0];
 	for (i=1;i<arr.length;i++){
 		if (max < arr[i]){
@@ -70,17 +70,17 @@ function get_message(arr) {
 		last_hour=arr;
 	}
 	let avg1=avg(last_hour);
-	let min1=minimi(last_hour);
-	let max1=maximi(last_hour);
+	let min1=min(last_hour);
+	let max1=max(last_hour);
 	let avg24=avg(arr);
-	let max24=maximi(arr);
-	let min24=minimi(arr);
+	let max24=max(arr);
+	let min24=min(arr);
 	let current=arr[arr.length-1];
 	return 'Nyt: '+ current+'\n'+
 	'Viimeisin tunti:\n'+
-	'\t max: '+max1+'\n\t min: '+min1+'\n\t avg: '+avg1+'\n'+
+	'\t max: '+max1+'\n\t min: '+min1+'\n\t avg: '+avg1.toFixed(1)+'\n'+
 	'Vuorokausi:\n'+
-	'\t max: '+max24+'\n\t min: '+min24+'\n\t avg: '+avg24+'\n'
+	'\t max: '+max24+'\n\t min: '+min24+'\n\t avg: '+avg24.toFixed(1)+'\n'
 	
 }
 
