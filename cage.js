@@ -39,7 +39,6 @@ function avg(arr) {
 	for (i=0;i<arr.length;i++){
 		sum+=arr[i];
 	}
-	console.log(arr.length);
 	return sum/arr.length;
 }
 function minimi(arr){
