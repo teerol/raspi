@@ -36,15 +36,15 @@ const HELP = 'Sää Ratinassa \n'+
 
 function avg(arr) {
 	let sum=0;
-	for (i=0;i<arr.lenght;i++){
+	for (i=0;i<arr.length;i++){
 		sum+=arr[i];
 	}
-	console.log(arr.lenght);
-	return sum/arr.lenght;
+	console.log(arr.length);
+	return sum/arr.length;
 }
 function minimi(arr){
 	min=arr[0];
-	for (i=1;i<arr.lenght;i++){
+	for (i=1;i<arr.length;i++){
 		if (min > arr[i]){
 			min=arr[i];
 		}
@@ -54,7 +54,7 @@ function minimi(arr){
 
 function maximi(arr){
 	max=arr[0];
-	for (i=1;i<arr.lenght;i++){
+	for (i=1;i<arr.length;i++){
 		if (max < arr[i]){
 			max=arr[i];
 		}
@@ -65,7 +65,7 @@ function maximi(arr){
 
 function get_message(arr) {
 	let last_hour;
-	if (arr.lenght>60){
+	if (arr.length>60){
 		last_hour=arr.slice(-60,end);
 	}else{
 		last_hour=arr;
@@ -76,7 +76,7 @@ function get_message(arr) {
 	let avg24=avg(arr);
 	let max24=maximi(arr);
 	let min24=minimi(arr);
-	let current=arr[-1];
+	let current=arr[arr.length-1];
 	return 'Nyt: '+ current+'\n'+
 	'Viimeisin tunti:\n'+
 	'\t max: '+max1+'\n\t min: '+min1+'\n\t avg: '+avg1+'\n'+
