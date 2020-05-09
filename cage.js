@@ -3,19 +3,19 @@ const ruuvi = require('node-ruuvitag');
 let temps = [];
 let pressures=[];
 let humiditis=[];
-let save=81;
+let save=91;
 var last_update = new Date();
 
 ruuvi.on('found', tag => {
   console.log('Found RuuviTag, id: ' + tag.id);
   tag.on('updated', data => {
-   	if (save>80){
+   	if (save>90){
 		temps.push(data.temperature);
 		pressures.push(data.pressure);
 		humiditis.push(data.humidity);
 		last_update = new Date();
 		save=0;
-		console.log(temps);
+		console.log(last_update);
 	
 		if (temps.lenght > 24*60){
 			temps.shift();
@@ -66,9 +66,15 @@ function max(arr){
 
 
 function get_message(arr) {
-	let avg1=avg(arr.slice(0,60));
-	let min1=min(arr.slice(0,60));
-	let max1=max(arr.slice(0,60));
+	let last_hour;
+	if (arr.lenght>60){
+		last_hour=arr.slice(-60,end);
+	}else{
+		last_hour=arr;
+	}
+	let avg1=avg(last_hour);
+	let min1=min(last_hour);
+	let max1=max(last_hour);
 	let avg24=agv(arr);
 	let max24=max(arr);
 	let min24=min(arr);
@@ -98,7 +104,7 @@ bot.on('/paine',(msg)=>msg.reply.text('Ilmanpaine (hehtoPascalia): \n'+get_messa
 bot.on('/kosteus',(msg)=>msg.reply.text('Ilmankosteus (%):\n'+get_message(humiditis)));
 bot.on('/updated',(msg)=>msg.reply.text('Viimeisin päivitys: '+last_update));
 bot.on('/help',(msg)=>msg.reply.text(HELP));
-bot.on('/ennuste',(msg)=>msg.reply.text(https://www.youtube.com/watch?v=bnI9K_05BzA));
+bot.on('/ennuste',(msg)=>msg.reply.text('https://www.youtube.com/watch?v=bnI9K_05BzA'));
 
 // start bot
 bot.start();
