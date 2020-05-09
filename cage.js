@@ -3,29 +3,25 @@ const ruuvi = require('node-ruuvitag');
 let temps = [];
 let pressures=[];
 let humiditis=[];
-//let save=101;
 var last_update = new Date();
 
 ruuvi.on('found', tag => {
   console.log('Found RuuviTag, id: ' + tag.id);
   tag.on('updated', data => {
 	var c=new Date();
-   	if (last_update.getTime()-c.getTime()>60000){
+   	if (c.getTime()-last_update.getTime()>60000){
 		temps.push(data.temperature);
 		pressures.push(data.pressure);
 		humiditis.push(data.humidity);
 		last_update = new Date();
-		//save=0;
 		console.log(last_update);
 	
+		// only saving the last 24 hours
 		if (temps.lenght > 24*60){
 			temps.shift();
 			pressures.shift();
 			humiditis.shift();
 		}
-	}
-	else{
-		//save += 1;
 	}
   });
 });
@@ -43,6 +39,7 @@ function avg(arr) {
 	for (i=0;i<arr.lenght;i++){
 		sum+=arr[i];
 	}
+	console.log(arr.lenght);
 	return sum/arr.lenght;
 }
 function minimi(arr){
@@ -75,18 +72,16 @@ function get_message(arr) {
 	}
 	let avg1=avg(last_hour);
 	let min1=minimi(last_hour);
-	console.log(min1);
 	let max1=maximi(last_hour);
-	console.log(max1);
-	let avg24=agv(arr);
+	let avg24=avg(arr);
 	let max24=maximi(arr);
 	let min24=minimi(arr);
-	let current=arr[arr.lenght-1]
+	let current=arr[-1];
 	return 'Nyt: '+ current+'\n'+
 	'Viimeisin tunti:\n'+
-	'\t max: '+max1+' min: '+min1+' avg: '+avg1+'\n'+
-	'Vuorokausi:/n'+
-	'\t max: '+max24+' min: '+min24+' avg: '+avg24+'\n'
+	'\t max: '+max1+'\n\t min: '+min1+'\n\t avg: '+avg1+'\n'+
+	'Vuorokausi:\n'+
+	'\t max: '+max24+'\n\t min: '+min24+'\n\t avg: '+avg24+'\n'
 	
 }
 
