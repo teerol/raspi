@@ -3,18 +3,19 @@ const ruuvi = require('node-ruuvitag');
 let temps = [];
 let pressures=[];
 let humiditis=[];
-let save=91;
+//let save=101;
 var last_update = new Date();
 
 ruuvi.on('found', tag => {
   console.log('Found RuuviTag, id: ' + tag.id);
   tag.on('updated', data => {
-   	if (save>90){
+	var c=new Date();
+   	if (last_update.getTime()-c.getTime()>60000){
 		temps.push(data.temperature);
 		pressures.push(data.pressure);
 		humiditis.push(data.humidity);
 		last_update = new Date();
-		save=0;
+		//save=0;
 		console.log(last_update);
 	
 		if (temps.lenght > 24*60){
@@ -24,7 +25,7 @@ ruuvi.on('found', tag => {
 		}
 	}
 	else{
-		save += 1;
+		//save += 1;
 	}
   });
 });
@@ -44,7 +45,7 @@ function avg(arr) {
 	}
 	return sum/arr.lenght;
 }
-function min(arr){
+function minimi(arr){
 	min=arr[0];
 	for (i=1;i<arr.lenght;i++){
 		if (min > arr[i]){
@@ -54,7 +55,7 @@ function min(arr){
 	return min;
 }
 
-function max(arr){
+function maximi(arr){
 	max=arr[0];
 	for (i=1;i<arr.lenght;i++){
 		if (max < arr[i]){
@@ -73,11 +74,13 @@ function get_message(arr) {
 		last_hour=arr;
 	}
 	let avg1=avg(last_hour);
-	let min1=min(last_hour);
-	let max1=max(last_hour);
+	let min1=minimi(last_hour);
+	console.log(min1);
+	let max1=maximi(last_hour);
+	console.log(max1);
 	let avg24=agv(arr);
-	let max24=max(arr);
-	let min24=min(arr);
+	let max24=maximi(arr);
+	let min24=minimi(arr);
 	let current=arr[arr.lenght-1]
 	return 'Nyt: '+ current+'\n'+
 	'Viimeisin tunti:\n'+
