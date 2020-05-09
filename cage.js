@@ -3,8 +3,8 @@ const ruuvi = require('node-ruuvitag');
 let temps = [];
 let pressures=[];
 let humiditis=[];
-let last_update;
 let save=81;
+var last_update = new Date();
 
 ruuvi.on('found', tag => {
   console.log('Found RuuviTag, id: ' + tag.id);
@@ -13,9 +13,9 @@ ruuvi.on('found', tag => {
 		temps.push(data.temperature);
 		pressures.push(data.pressure);
 		humiditis.push(data.humidity);
-		var last_update = new Date();
+		last_update = new Date();
 		save=0;
-		console.log(temps+'/n');
+		console.log(temps);
 	
 		if (temps.lenght > 24*60){
 			temps.shift();
@@ -29,38 +29,55 @@ ruuvi.on('found', tag => {
   });
 });
 
-// handeling the data (current, hour avg, day avg)
-
-
-
 // telebot commands
-let HELP = 'Sää Ratinassa /n'
-'/lampo kertoo nykyisen lämpötilan, sekä viimeisen tunnin ja vuorokauden keski- maksimi- ja minimi lämpötilat /n'+
-'/paine kertoo nykyisen ilmanpaineen, sekä viimeisen tunnin ja vuorokauden keski- maksimi- ja minimi ilmanpaineet /n'+
-'/kosteus kertoo nykyisen ilmankosteuden, sekä viimeisen tunnin ja vuorokauden keski- maksimi- ja minimi ilmankosteudet /n'+
-'/updated kertoo kelonajan koska sää on viimeksi päivittynyt /n';
+const HELP = 'Sää Ratinassa \n'+
+'/lampo kertoo nykyisen lämpötilan, sekä viimeisen tunnin ja vuorokauden keski- maksimi- ja minimi lämpötilat \n'+
+'/paine kertoo nykyisen ilmanpaineen, sekä viimeisen tunnin ja vuorokauden keski- maksimi- ja minimi ilmanpaineet \n'+
+'/kosteus kertoo nykyisen ilmankosteuden, sekä viimeisen tunnin ja vuorokauden keski- maksimi- ja minimi ilmankosteudet \n'+
+'/updated kertoo koska sää on viimeksi päivittynyt \n'+
+'/ennuste generoi videoennusteen (beta)';
 
-functionn avg(arr) {
+function avg(arr) {
 	let sum=0;
-	for (i=0,i<arr.lenght(),i++){
+	for (i=0;i<arr.lenght;i++){
 		sum+=arr[i];
 	}
-	return sum/arr.lenght();
+	return sum/arr.lenght;
+}
+function min(arr){
+	min=arr[0];
+	for (i=1;i<arr.lenght;i++){
+		if (min > arr[i]){
+			min=arr[i];
+		}
+	}
+	return min;
 }
 
+function max(arr){
+	max=arr[0];
+	for (i=1;i<arr.lenght;i++){
+		if (max < arr[i]){
+			max=arr[i];
+		}
+	}
+	return max;
+}
+
+
 function get_message(arr) {
-	let avg1=avg(arr.slice(0,60);
-	let min1=arr.slice(0,60).min()
-	let max1=arr.slice(0,60).max();
+	let avg1=avg(arr.slice(0,60));
+	let min1=min(arr.slice(0,60));
+	let max1=max(arr.slice(0,60));
 	let avg24=agv(arr);
-	let max24=arr.max();
-	let min24=arr.min();
-	let current=arr[arr.lenght]
-	return 'Nyt: '+ current+'/n'+
-	'Viimeisin tunti:/n'+
-	'/t max: '+max1+' min: '+min1+' avg: '+avg1+'/n'+
+	let max24=max(arr);
+	let min24=min(arr);
+	let current=arr[arr.lenght-1]
+	return 'Nyt: '+ current+'\n'+
+	'Viimeisin tunti:\n'+
+	'\t max: '+max1+' min: '+min1+' avg: '+avg1+'\n'+
 	'Vuorokausi:/n'+
-	'/t max: '+max24+' min: '+min24+' avg: '+avg24+'/n'
+	'\t max: '+max24+' min: '+min24+' avg: '+avg24+'\n'
 	
 }
 
@@ -76,11 +93,12 @@ const bot = new TeleBot({
 });
 // wait for command
 bot.on('/hello', (msg) => msg.reply.text("terve vuoan!"));
-bot.on('/lampo',(msg)=>msg.reply.text(get_message(temps)));
-bot.on('/paine',(msg)=>msg.reply.text(get_message(pressures)));
-bot.on('/kosteus',(msg)=>msg.reply.text(get_message(humiditis)));
-bot.on('/updated',(msg)=>msg.reply.text(last_update));
+bot.on('/lampo',(msg)=>msg.reply.text('Lämpötila (astetta Celsiusta): \n'+get_message(temps)));
+bot.on('/paine',(msg)=>msg.reply.text('Ilmanpaine (hehtoPascalia): \n'+get_message(pressures)));
+bot.on('/kosteus',(msg)=>msg.reply.text('Ilmankosteus (%):\n'+get_message(humiditis)));
+bot.on('/updated',(msg)=>msg.reply.text('Viimeisin päivitys: '+last_update));
 bot.on('/help',(msg)=>msg.reply.text(HELP));
+bot.on('/ennuste',(msg)=>msg.reply.text(https://www.youtube.com/watch?v=bnI9K_05BzA));
 
 // start bot
 bot.start();
