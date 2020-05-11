@@ -1,15 +1,16 @@
 // reading data from ruuvi
 const ruuvi = require('node-ruuvitag');
+const plotlib = require('nodeplotlib');
 let temps = [];
 let pressures=[];
 let humiditis=[];
-var last_update = new Date();
+var last_update = new Date(0);
 
 ruuvi.on('found', tag => {
   console.log('Found RuuviTag, id: ' + tag.id);
   tag.on('updated', data => {
 	var c=new Date();
-   	if (c.getTime()-last_update.getTime()>=60000){
+   	if (c.getTime()-last_update.getTime()>=59500){
 		temps.push(data.temperature);
 		pressures.push(data.pressure);
 		humiditis.push(data.humidity);
@@ -61,11 +62,10 @@ function max(arr){
 	return max;
 }
 
-
 function get_message(arr) {
 	let last_hour;
 	if (arr.length>60){
-		last_hour=arr.slice(-60,end);
+		last_hour=arr.slice(-60);
 	}else{
 		last_hour=arr;
 	}
@@ -82,6 +82,14 @@ function get_message(arr) {
 	'Vuorokausi:\n'+
 	'\t max: '+max24+'\n\t min: '+min24+'\n\t avg: '+avg24.toFixed(1)+'\n'
 	
+}
+
+function plot_all(){
+	for (i=0,t=[];i<temps.length;i++){
+		t.push(i);
+	}
+	const temp: Plot = {x: t, y: temps, type: 'line'};
+	return plotlib.plot([temp]);
 }
 
 const TeleBot = require('telebot');
@@ -102,6 +110,7 @@ bot.on('/kosteus',(msg)=>msg.reply.text('Ilmankosteus (%):\n'+get_message(humidi
 bot.on('/updated',(msg)=>msg.reply.text('Viimeisin päivitys: '+last_update));
 bot.on('/help',(msg)=>msg.reply.text(HELP));
 bot.on('/ennuste',(msg)=>msg.reply.text('https://www.youtube.com/watch?v=bnI9K_05BzA'));
+bot.on('/graph',(msg)=>msg.reply.text(plot_all()));
 
 // start bot
 bot.start();
