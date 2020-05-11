@@ -42,7 +42,7 @@ function avg(arr) {
 	}
 	return sum/arr.length;
 }
-function min(arr){
+function find_min(arr){
 	min=arr[0];
 	for (i=1;i<arr.length;i++){
 		if (min > arr[i]){
@@ -52,7 +52,7 @@ function min(arr){
 	return min;
 }
 
-function max(arr){
+function find_max(arr){
 	max=arr[0];
 	for (i=1;i<arr.length;i++){
 		if (max < arr[i]){
@@ -70,11 +70,11 @@ function get_message(arr) {
 		last_hour=arr;
 	}
 	let avg1=avg(last_hour);
-	let min1=min(last_hour);
-	let max1=max(last_hour);
+	let min1=find_min(last_hour);
+	let max1=find_max(last_hour);
 	let avg24=avg(arr);
-	let max24=max(arr);
-	let min24=min(arr);
+	let max24=find_max(arr);
+	let min24=find_min(arr);
 	let current=arr[arr.length-1];
 	return 'Nyt: '+ current+'\n'+
 	'Viimeisin tunti:\n'+
