@@ -1,10 +1,11 @@
 // reading data from ruuvi
 const ruuvi = require('node-ruuvitag');
-const plotlib = require('nodeplotlib');
+const {execFile} = require('child_process');
 let temps = [];
 let pressures=[];
 let humiditis=[];
 var last_update = new Date(0);
+const started = new Date();
 
 ruuvi.on('found', tag => {
   console.log('Found RuuviTag, id: ' + tag.id);
@@ -18,7 +19,7 @@ ruuvi.on('found', tag => {
 		console.log(last_update);
 	
 		// only saving the last 24 hours
-		if (temps.lenght > 24*60){
+		if (temps.length > 24*60){
 			temps.shift();
 			pressures.shift();
 			humiditis.shift();
@@ -29,11 +30,13 @@ ruuvi.on('found', tag => {
 
 // telebot commands
 const HELP = 'Sää Ratinassa \n'+
+'Mittalaite RuuviTag, resoluutio 1 yksikkö, mittaustaajuus 1/min\n'+
 '/lampo kertoo nykyisen lämpötilan, sekä viimeisen tunnin ja vuorokauden keski- maksimi- ja min lämpötilat \n'+
 '/paine kertoo nykyisen ilmanpaineen, sekä viimeisen tunnin ja vuorokauden keski- maksimi- ja min ilmanpaineet \n'+
 '/kosteus kertoo nykyisen ilmankosteuden, sekä viimeisen tunnin ja vuorokauden keski- maksimi- ja min ilmankosteudet \n'+
-'/updated kertoo koska sää on viimeksi päivittynyt \n'+
-'/ennuste generoi videoennusteen (beta)';
+'/updated kertoo koska sää on viimeksi päivittynyt sekä mittausten aloitusajankohdan\n'+
+'/ennuste generoi videoennusteen (beta)\n'+
+'/graph piirtää kuvaajan viimeisen vuorokauden mittaustuloksista';
 
 function avg(arr) {
 	let sum=0;
@@ -81,16 +84,16 @@ function get_message(arr) {
 	'\t max: '+max1+'\n\t min: '+min1+'\n\t avg: '+avg1.toFixed(1)+'\n'+
 	'Vuorokausi:\n'+
 	'\t max: '+max24+'\n\t min: '+min24+'\n\t avg: '+avg24.toFixed(1)+'\n'
+}
 	
+function sleep(milliseconds) {
+  const date = Date.now();
+  let currentDate = null;
+  do {
+    currentDate = Date.now();
+  } while (currentDate - date < milliseconds);
 }
 
-function plot_all(){
-	for (i=0,t=[];i<temps.length;i++){
-		t.push(i);
-	}
-	const temp: Plot = {x: t, y: temps, type: 'line'};
-	return plotlib.plot([temp]);
-}
 
 const TeleBot = require('telebot');
 const bot = new TeleBot({
@@ -103,14 +106,20 @@ const bot = new TeleBot({
   }
 });
 // wait for command
-bot.on('/hello', (msg) => msg.reply.text("terve vuoan!"));
+bot.on('/hello', (msg) => msg.reply.text("Terve vuoan msg.chat.first_name!"));
 bot.on('/lampo',(msg)=>msg.reply.text('Lämpötila (astetta Celsiusta): \n'+get_message(temps)));
 bot.on('/paine',(msg)=>msg.reply.text('Ilmanpaine (hehtoPascalia): \n'+get_message(pressures)));
 bot.on('/kosteus',(msg)=>msg.reply.text('Ilmankosteus (%):\n'+get_message(humiditis)));
-bot.on('/updated',(msg)=>msg.reply.text('Viimeisin päivitys: '+last_update));
+bot.on('/updated',(msg)=>msg.reply.text('Viimeisin päivitys: '+last_update+'\nMittaus aloitettu: '+started));
 bot.on('/help',(msg)=>msg.reply.text(HELP));
 bot.on('/ennuste',(msg)=>msg.reply.text('https://www.youtube.com/watch?v=bnI9K_05BzA'));
-bot.on('/graph',(msg)=>msg.reply.text(plot_all()));
-
+bot.on('/graph',function onPhoto(msg) {
+	execFile('python3',['plot.py',temps,pressures,humiditis]);
+	sleep(3000); // so the python can be finised
+	const photo = 'figuuri.png';
+	bot.sendPhoto(msg.chat.id, photo, {
+		caption: "Mittausdata viimeisen vuorokauden ajalta, ole hyvä."
+	});
+});
 // start bot
 bot.start();
