@@ -2,8 +2,7 @@ import matplotlib.pyplot as plt
 import sys
 import datetime
 
-def smooth(data):
-    number=5
+def smooth(data,number):
     i=1
     new_data=[]
     while i<len(data):
@@ -31,9 +30,9 @@ def plot(temp,pre,hud):
         press.append(float(pl[i]))
         huds.append(float(hl[i]))
         
-    temps=smooth(temps)
-    press=smooth(press)
-    huds=smooth(huds)
+    #tempss=smooth(temps,30)
+    #press=smooth(press,200)
+    #huds=smooth(huds,30)
     
     # using datetimes in x-axis
     t=[datetime.datetime.now()+datetime.timedelta(minutes=i) for i in range(-len(temps),0)]

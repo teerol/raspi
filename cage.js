@@ -6,6 +6,7 @@ let pressures=[];
 let humiditis=[];
 var last_update = new Date(0);
 const started = new Date();
+let logs = new Map();
 
 ruuvi.on('found', tag => {
   console.log('Found RuuviTag, id: ' + tag.id);
@@ -13,7 +14,7 @@ ruuvi.on('found', tag => {
 	var c=new Date();
    	if (c.getTime()-last_update.getTime()>=59500){
 		temps.push(data.temperature);
-		pressures.push(data.pressure);
+		pressures.push(data.pressure/100); //pascal to hPa
 		humiditis.push(data.humidity);
 		last_update = new Date();
 		console.log(last_update);
@@ -30,13 +31,13 @@ ruuvi.on('found', tag => {
 
 // telebot commands
 const HELP = 'Sää Ratinassa \n'+
-'Mittalaite RuuviTag, resoluutio 1 yksikkö, mittaustaajuus 1/min\n'+
-'/lampo kertoo nykyisen lämpötilan, sekä viimeisen tunnin ja vuorokauden keski- maksimi- ja min lämpötilat \n'+
-'/paine kertoo nykyisen ilmanpaineen, sekä viimeisen tunnin ja vuorokauden keski- maksimi- ja min ilmanpaineet \n'+
-'/kosteus kertoo nykyisen ilmankosteuden, sekä viimeisen tunnin ja vuorokauden keski- maksimi- ja min ilmankosteudet \n'+
+'Mittalaite RuuviTag, mittaustaajuus 1/min\n'+
+'/lampo kertoo nykyisen lämpötilan, sekä viimeisen tunnin ja vuorokauden keski- maksimi- ja minimi lämpötilat. Mittauksen resoluutio 0.01 \n'+
+'/paine kertoo nykyisen ilmanpaineen, sekä viimeisen tunnin ja vuorokauden keski- maksimi- ja minimi ilmanpaineet. Mittauksen resoluutio 0.01 \n'+
+'/kosteus kertoo nykyisen ilmankosteuden, sekä viimeisen tunnin ja vuorokauden keski- maksimi- ja minimi ilmankosteudet. Mittauksen resoluutio 0.0001 \n'+
 '/updated kertoo koska sää on viimeksi päivittynyt sekä mittausten aloitusajankohdan\n'+
-'/ennuste generoi videoennusteen (beta)\n'+
-'/graph piirtää kuvaajan viimeisen vuorokauden mittaustuloksista';
+'/ennuste kertoo huomisen sään sekä generoi videoennusteen (beta)\n'+
+'/graph piirtää kuvaajan viimeisen vuorokauden mittaustuloksista.';
 
 function avg(arr) {
 	let sum=0;
@@ -81,9 +82,9 @@ function get_message(arr) {
 	let current=arr[arr.length-1];
 	return 'Nyt: '+ current+'\n'+
 	'Viimeisin tunti:\n'+
-	'\t max: '+max1+'\n\t min: '+min1+'\n\t avg: '+avg1.toFixed(1)+'\n'+
+	'\t max: '+max1+'\n\t min: '+min1+'\n\t avg: '+avg1.toFixed(3)+'\n'+
 	'Vuorokausi:\n'+
-	'\t max: '+max24+'\n\t min: '+min24+'\n\t avg: '+avg24.toFixed(1)+'\n'
+	'\t max: '+max24+'\n\t min: '+min24+'\n\t avg: '+avg24.toFixed(3)+'\n'
 }
 	
 function sleep(milliseconds) {
@@ -92,6 +93,28 @@ function sleep(milliseconds) {
   do {
     currentDate = Date.now();
   } while (currentDate - date < milliseconds);
+}
+
+function log(user) {
+	if(logs.has(user)){
+		// Map is immutable...
+		value=logs.get(user);
+		logs.delete(user);
+		logs.set(user,value+1)
+	}else{
+		logs.set(user,1);	
+	}
+}
+
+function sarvet() {
+	str="Huomenna ";
+	randint=Math.floor(Math.random()*10)+1;
+	if(randint%2==0){
+		str+="sataa...";
+	}else{
+		str+="on pouta...";
+	}
+	return str;
 }
 
 
@@ -106,16 +129,22 @@ const bot = new TeleBot({
   }
 });
 // wait for command
-bot.on('/hello', (msg) => msg.reply.text("Terve vuoan msg.chat.first_name!"));
-bot.on('/lampo',(msg)=>msg.reply.text('Lämpötila (astetta Celsiusta): \n'+get_message(temps)));
-bot.on('/paine',(msg)=>msg.reply.text('Ilmanpaine (hehtoPascalia): \n'+get_message(pressures)));
-bot.on('/kosteus',(msg)=>msg.reply.text('Ilmankosteus (%):\n'+get_message(humiditis)));
-bot.on('/updated',(msg)=>msg.reply.text('Viimeisin päivitys: '+last_update+'\nMittaus aloitettu: '+started));
-bot.on('/help',(msg)=>msg.reply.text(HELP));
-bot.on('/ennuste',(msg)=>msg.reply.text('https://www.youtube.com/watch?v=bnI9K_05BzA'));
+bot.on('/hello', (msg) => msg.reply.text("Terve vuoan " + msg.chat.first_name+"!",log(msg.chat.username)));
+bot.on('/lampo',(msg)=>msg.reply.text('Lämpötila (astetta Celsiusta): \n'+get_message(temps),log(msg.chat.username)));
+bot.on('/paine',(msg)=>msg.reply.text('Ilmanpaine (hehtoPascalia): \n'+get_message(pressures),log(msg.chat.username)));
+bot.on('/kosteus',(msg)=>msg.reply.text('Ilmankosteus (%):\n'+get_message(humiditis),log(msg.chat.username)));
+bot.on('/updated',(msg)=>msg.reply.text('Viimeisin päivitys: '+last_update+'\nMittaus aloitettu: '+started,log(msg.chat.username)));
+bot.on('/help',(msg)=>msg.reply.text(HELP,log(msg.chat.username)));
+bot.on('/ennuste',(msg)=>msg.reply.text(sarvet()+'\nTarkempi ennuste: https://www.youtube.com/watch?v=bnI9K_05BzA',log(msg.chat.username)));
+bot.on('/logs',function onLogs(msg) {
+	for (let [key,value] of logs){
+		console.log(key+" : "+value+"\n");
+		}
+	});	
 bot.on('/graph',function onPhoto(msg) {
+	log(msg.chat.username);
 	execFile('python3',['plot.py',temps,pressures,humiditis]);
-	sleep(3000); // so the python can be finised
+	sleep(2500); // so the python can be finised
 	const photo = 'figuuri.png';
 	bot.sendPhoto(msg.chat.id, photo, {
 		caption: "Mittausdata viimeisen vuorokauden ajalta, ole hyvä."
