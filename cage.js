@@ -138,7 +138,7 @@ bot.on('/help',(msg)=>msg.reply.text(HELP,log(msg.chat.username)));
 bot.on('/ennuste',(msg)=>msg.reply.text(sarvet()+'\nTarkempi ennuste: https://www.youtube.com/watch?v=bnI9K_05BzA',log(msg.chat.username)));
 bot.on('/logs',function onLogs(msg) {
 	for (let [key,value] of logs){
-		console.log(key+" : "+value+"\n");
+		console.log(key+" : "+value);
 		}
 	});	
 bot.on('/graph',function onPhoto(msg) {
