@@ -1,8 +1,12 @@
+# plotting weatherdata using matplotlib
+# plotted figure is saved
+
 import matplotlib.pyplot as plt
 import sys
 import datetime
 
 def smooth(data,number):
+    # calculates floating average over number of mesurments
     i=1
     new_data=[]
     while i<len(data):
@@ -29,7 +33,8 @@ def plot(temp,pre,hud):
         temps.append(float(tl[i]))
         press.append(float(pl[i]))
         huds.append(float(hl[i]))
-        
+    
+    # unneassessary in latest measuremt insturment configuration
     #tempss=smooth(temps,30)
     #press=smooth(press,200)
     #huds=smooth(huds,30)
@@ -65,6 +70,7 @@ def plot(temp,pre,hud):
     plt.gcf().autofmt_xdate() # showing dates neather in x axis
     fig.legend(loc='lower left')
     ax1.grid(axis='y')
+    
     # time label for title
     start=datetime.datetime.now()+datetime.timedelta(minutes=-len(temps))
     now=datetime.datetime.now()
